@@ -14,6 +14,22 @@ export namespace main {
 	        this.postcode = source["postcode"];
 	    }
 	}
+	export class Peer {
+	    address: string;
+	    name: string;
+	    id: number;
+	
+	    static createFrom(source: any = {}) {
+	        return new Peer(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.address = source["address"];
+	        this.name = source["name"];
+	        this.id = source["id"];
+	    }
+	}
 	export class Person {
 	    address?: Address;
 	    name: string;
@@ -47,23 +63,6 @@ export namespace main {
 		    }
 		    return a;
 		}
-	}
-	
-	export class Peer {
-	    address: string;
-	    name: string;
-	    id: number;
-	
-	    static createFrom(source: any = {}) {
-	        return new Peer(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.address = source["address"];
-	        this.name = source["name"];
-	        this.id = source["id"];
-	    }
 	}
 
 }

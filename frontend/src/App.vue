@@ -1,10 +1,11 @@
 <script setup>
-import HelloWorld from './components/HelloWorld.vue'
 </script>
 
 <template>
-  <img id="logo" alt="Wails logo" src="./assets/images/logo-universal.png"/>
-  <HelloWorld/>
+  <div>
+    <!-- <img id="logo" alt="Wails logo" src="./assets/images/logo-universal.png"/> -->
+    <router-view></router-view>
+  </div>
 </template>
 
 <style>

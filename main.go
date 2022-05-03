@@ -16,8 +16,8 @@ func main() {
 
 	// Create application with options
 	err := wails.Run(&options.App{
-		Title:     "sharewire",
-		Width:     1024,
+		Title:     "Sharewire",
+		Width:     500,
 		Height:    768,
 		Assets:    assets,
 		OnStartup: app.startup,

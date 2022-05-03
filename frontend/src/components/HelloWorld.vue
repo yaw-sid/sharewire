@@ -1,6 +1,7 @@
 <script setup>
 import {reactive} from 'vue'
 import {Greet} from '../../wailsjs/go/main/App'
+import {main} from '../../wailsjs/go/models'
 
 const data = reactive({
   name: "",
@@ -8,7 +9,10 @@ const data = reactive({
 })
 
 function greet() {
-  Greet(data.name).then(result => {
+  let person = new main.Person();
+  person.name = data.name;
+  person.age = 27;
+  Greet(person).then(result => {
     data.resultText = result
   })
 }

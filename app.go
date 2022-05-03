@@ -22,6 +22,15 @@ func (a *App) startup(ctx context.Context) {
 }
 
 // Greet returns a greeting for the given name
-func (a *App) Greet(name string) string {
-	return fmt.Sprintf("Hello %s, It's show time!", name)
+func (a *App) Greet(p Person) string {
+	return fmt.Sprintf("Hello %s (Age: %d)!", p.Name, p.Age)
+}
+
+func (a *App) ListPeers() []Peer {
+	return []Peer{
+		*NewPeer("wed3e2e2w", "Peer 1", 1),
+		*NewPeer("wed3e2e2w", "Peer 2", 2),
+		*NewPeer("wed3e2e2w", "Peer 3", 3),
+		*NewPeer("wed3e2e2w", "Peer 4", 4),
+	}
 }

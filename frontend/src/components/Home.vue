@@ -5,7 +5,7 @@
     </div>
     <h1>Please select a user to interact with</h1>
     <transition-group name="list" tag="ul">
-      <li v-for="peer in state.peers" :key="peer.id" @click="navigateToFiles(peer)">{{ peer.name }}</li>
+      <li v-for="(peer, index) in peers" :key="index" @click="navigateToFiles(peer)">{{ peer }}</li>
     </transition-group>
   </article>
 </template>
@@ -13,25 +13,16 @@
 <script setup>
 import { onMounted, reactive } from "vue";
 import { useRouter } from "vue-router";
-import { ListPeers } from "../../wailsjs/go/main/App";
 
 const router = useRouter();
 
-const state = reactive({
-  peers: []
-});
+const peers = reactive([]);
 
 onMounted(async () => {
-  await listPeers();
+  window.runtime.EventsOn("data_backend", (data) => {
+    peers.push(data);
+  });
 });
-
-async function listPeers() {
-  try {
-    state.peers = await ListPeers();
-  } catch (error) {
-    LogError(error);
-  }
-}
 
 function navigateToFiles(peer) {
   router.push({

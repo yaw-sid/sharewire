@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"context"
 
-	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/libp2p/go-libp2p-core/peer"
 	"github.com/libp2p/go-libp2p-core/protocol"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -41,69 +40,44 @@ func (a *App) startup(ctx context.Context) {
 		return
 	}
 
+	// Listen in goroutine so that the app startup process can continue
 	go func() {
 		for p := range peerChan {
-			runtime.LogInfo(ctx, "Found peer: "+p.ID.Pretty()+", connecting")
-			if err := h.Connect(ctx, p); err != nil {
-				runtime.LogErrorf(ctx, "Connection failed: %s\n", err.Error())
-				continue
-			}
-
-			// Open a stream and exchange aliases
-			stream, err := h.NewStream(ctx, p.ID, protocol.ID(PROTOCOL))
-			if err != nil {
-				runtime.LogErrorf(ctx, "Stream open failed: %s\n", err.Error())
-				continue
-			}
-			rw := bufio.NewReadWriter(bufio.NewReader(stream), bufio.NewWriter(stream))
-			// Send alias
-			// TODO: Alias command
-			msg := ALIAS_REQUEST + "nicki"
-			if err = writeOnce(ctx, rw, msg); err != nil {
-				runtime.LogErrorf(ctx, "Buffer error: %s\n", err.Error())
-				continue
-			}
-			// TODO: Create an infinite loop listening for alias response command.
-			// Once it is found save it and close the stream
-			// A new stream will be opened for subsequent communications
-			go func(p peer.AddrInfo, s network.Stream) {
+			// Run in goroutine so that app can connect to other peers while doing the alias handshake
+			go func(p peer.AddrInfo) {
+				runtime.LogInfof(ctx, "Found peer: %s\n", p.ID.Pretty())
+				if err := h.Connect(ctx, p); err != nil {
+					runtime.LogErrorf(ctx, "Connection failed: %s\n", err.Error())
+					return
+				}
+				// Open a stream with new peer to ask for alias
+				stream, err := h.NewStream(ctx, p.ID, protocol.ID(PROTOCOL))
+				if err != nil {
+					runtime.LogErrorf(ctx, "Stream open failed: %s\n", err.Error())
+					return
+				}
+				// defer stream.Close()
+				rw := bufio.NewReadWriter(bufio.NewReader(stream), bufio.NewWriter(stream))
+				// Send alias ping
+				msg := ALIAS_REQUEST + "nicki:" + h.ID().String()
+				if err = writeOnce(ctx, rw, msg); err != nil {
+					runtime.LogErrorf(ctx, "Buffer error: %s\n", err.Error())
+					return
+				}
+				// Wait for alias pong
 				for {
 					str, err := readOnce(ctx, rw)
 					if err != nil {
 						runtime.LogErrorf(ctx, "Error reading from buffer: %s\n", err.Error())
-						continue
+						break
 					}
-					if str[0:10] == ALIAS_RESPONSE {
+					if str[:10] == ALIAS_RESPONSE {
 						info := Peer{ID: p.ID.String(), Alias: str[10:]}
 						runtime.EventsEmit(ctx, "data_backend", info)
-						// Close stream
-						stream.Reset()
+						break
 					}
 				}
-			}(p, stream)
+			}(p)
 		}
 	}()
-
-	/* go func(ctx context.Context, h host.Host) {
-		for peer := range peerChan {
-			runtime.LogInfo(ctx, "Found peer: "+peer.ID.Pretty()+", connecting")
-			if err := h.Connect(ctx, peer); err != nil {
-				runtime.LogErrorf(ctx, "Connection failed: %s\n", err.Error())
-			}
-
-			stream, err := h.NewStream(ctx, peer.ID, protocol.ID(PROTOCOL))
-			if err != nil {
-				runtime.LogErrorf(ctx, "Stream open failed: %s\n", err.Error())
-			} else {
-				runtime.EventsEmit(ctx, "data_backend", peer.ID)
-				hdler := NewHandler(ctx)
-				rw := bufio.NewReadWriter(bufio.NewReader(stream), bufio.NewWriter(stream))
-
-				go hdler.readData(rw)
-				runtime.EventsOn(ctx, "data_frontend", func(optionalData ...interface{}) {
-					hdler.writeData(rw, optionalData)
-				})
-			}
-		}
-	}(ctx, h) */
 }

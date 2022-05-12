@@ -12,8 +12,8 @@ import (
 )
 
 type Peer struct {
-	ID    string
-	Alias string
+	ID    string `json:"id"`
+	Alias string `json:"alias"`
 }
 
 func makeHost(ctx context.Context) (host.Host, error) {

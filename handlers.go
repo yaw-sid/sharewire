@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/libp2p/go-libp2p-core/network"
 	"github.com/wailsapp/wails/v2/pkg/runtime"
@@ -33,14 +34,25 @@ func (h *Handler) readData(rw *bufio.ReadWriter) {
 		str, err := rw.ReadString('\n')
 		if err != nil {
 			runtime.LogErrorf(h.ctx, "Error reading from buffer: %s", err.Error())
-			return
+			continue
 		}
 
 		if str == "" {
-			return
+			continue
 		}
 
-		runtime.EventsEmit(h.ctx, "data_backend", str)
+		info := Peer{}
+		if str[:10] == ALIAS_REQUEST {
+			resp := ALIAS_RESPONSE + "aka\n"
+			if err = writeOnce(h.ctx, rw, resp); err != nil {
+				runtime.LogErrorf(h.ctx, "Buffer error: %s\n", err.Error())
+				continue
+			}
+			strs := strings.Split(str[10:], ":")
+			info.Alias = strs[0]
+			info.ID = strs[1]
+		}
+		runtime.EventsEmit(h.ctx, "data_backend", info)
 	}
 }
 
@@ -74,9 +86,6 @@ func writeOnce(ctx context.Context, rw *bufio.ReadWriter, data string) error {
 func readOnce(ctx context.Context, rw *bufio.ReadWriter) (string, error) {
 	str, err := rw.ReadString('\n')
 	if err != nil {
-		return "", err
-	}
-	if str == "" {
 		return "", err
 	}
 	return str, nil

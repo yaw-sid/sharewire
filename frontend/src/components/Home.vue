@@ -5,7 +5,7 @@
     </div>
     <h1>Please select a user to interact with</h1>
     <transition-group name="list" tag="ul">
-      <li v-for="(peer, index) in peers" :key="index" @click="navigateToFiles(peer)">{{ peer }}</li>
+      <li v-for="(peer, index) in peers" :key="index" @click="navigateToFiles(peer)">{{ peer.alias }}</li>
     </transition-group>
   </article>
 </template>
